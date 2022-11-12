@@ -1,6 +1,6 @@
 # locust-report-portal
 
-This tutorial is about logging performance test results in Report Portal
+This tutorial is about logging performance test results in Report Portal.
 It uses Report portal python client https://github.com/reportportal/client-Python
 
 First Initialize Report portal agent and create a launch and test
