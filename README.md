@@ -3,6 +3,7 @@
 This tutorial is about logging performance test results in Report Portal.
 It uses Report portal python client https://github.com/reportportal/client-Python
 
+## Initialize report portal and create launch/test
 First Initialize Report portal agent and create a launch and test in test_start event
 ```
 from locust import HttpUser, between, events
@@ -37,7 +38,7 @@ def on_test_start(environment, **kwargs):
                                   parameters={"Testcase": "Testing some API performance",
                                               "key2": "val2"})
 ```
-
+## Record request result in report portal log
 After each request is over request event will be triggered. In it request result will be recorded in report portal logs.
 Note: As many requests will be recorded ,it is recorded in DEBUG level. Based on your project need you can modify it
 
@@ -50,8 +51,8 @@ def record_in_report_portal(request_type, name, response_time, response_length, 
             message=request_log,
             level="DEBUG")
 ```
-
-After all the execution is over ,check whether test is failed or passed
+## Assess the test result and record
+After all the execution is over ,check whether test is failed or passed. Here we used fail ratio to check it. 
 
 ```
 def log_stats_summary(environment, logger):
