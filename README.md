@@ -4,7 +4,10 @@ This tutorial is about logging performance test results in Report Portal
 
 First Initialize Report portal agent and create a launch and test
 ```
+from locust import HttpUser, between, events
 from reportportal_client import ReportPortalService
+from locust.runners import WorkerRunner
+import locust_plugins
 
 @events.test_start.add_listener
 def on_test_start(environment, **kwargs):
@@ -34,7 +37,8 @@ def on_test_start(environment, **kwargs):
                                               "key2": "val2"})
 ```
 
-After each request is over below event will be triggered. It will be record the result in report portal logger.
+After each request is over below event will be triggered. It will be recording the request result in report portal logger.
+As many requests will be recorded ,it is recorded in DEBUG level. Based on your project need you can modify it
 
 ```
 @events.request.add_listener
@@ -43,12 +47,48 @@ def record_in_report_portal(request_type, name, response_time, response_length, 
     request_log= f"| Type: {request_type} | Request: {name} -> {url}| Response time: {response_time}ms | start_time: {start_date_time} |"
     service.log(time=timestamp(),
             message=request_log,
-            level="INFO")
+            level="DEBUG")
 ```
 
 After all the execution is over ,check whether test is failed or passed
 
 ```
+def log_stats_summary(environment, logger):
+    """
+        This will record the Result summary, percentile summary and Error summary in report portal
+    """
+    # Record result summary in Report portal
+    service.log(time=timestamp(),
+            message="Result Summary",
+            level="INFO")
+    summary = stats.get_stats_summary(environment.runner.stats, True)
+    summary_str = '\n'.join([str(elem) for elem in summary])
+    service.log(time=timestamp(),
+            message=summary_str,
+            level="INFO")
+    
+    # Record percentile summary in report portal
+    percentile_stats = stats.get_percentile_stats_summary(environment.runner.stats)
+    service.log(time=timestamp(),
+            message="Percentile Summary",
+            level="INFO")
+    percentile_str = '\n'.join([str(elem) for elem in percentile_stats])
+    service.log(time=timestamp(),
+            message=percentile_str,
+            level="INFO")
+    
+    # Record Error summary in report portal
+    if len(environment.runner.stats.errors):
+        service.log(time=timestamp(),
+            message="Error Summary",
+            level="INFO")
+        # logger.info(stats.get_error_report_summary(environment.runner.stats))
+        summary = stats.get_error_report_summary(environment.runner.stats)
+        summary_str = '\n'.join([str(elem) for elem in summary])
+        service.log(time=timestamp(),
+            message=summary_str,
+            level="INFO")
+        
 @events.quitting.add_listener
 def do_checks(environment, **_kw):
   # Did check whether the tests pass or fail
